@@ -605,6 +605,14 @@ void arena_mem_free(ArenaMem mem, ArenaMem *reuse_blk)
   }
 }
 
+char *arena_memdupz(Arena *arena, const char *buf, size_t size)
+{
+  char *mem = arena_alloc(arena, size + 1, false);
+  memcpy(mem, buf, size);
+  mem[size] = NUL;
+  return mem;
+}
+
 #if defined(EXITFREE)
 
 # include "nvim/buffer.h"
@@ -786,6 +794,7 @@ void free_all_mem(void)
   decor_free_all_mem();
 
   nlua_free_all_mem();
+  ui_free_all_mem();
 }
 
 #endif
