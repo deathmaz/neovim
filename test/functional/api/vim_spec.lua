@@ -3167,6 +3167,10 @@ describe('API', function()
           browse = false,
           confirm = false,
           emsg_silent = false,
+          filter = {
+              pattern = "",
+              force = false
+          },
           hide = false,
           keepalt = false,
           keepjumps = false,
@@ -3177,10 +3181,11 @@ describe('API', function()
           noswapfile = false,
           sandbox = false,
           silent = false,
-          vertical = false,
           split = "",
           tab = 0,
-          verbose = -1
+          unsilent = false,
+          verbose = -1,
+          vertical = false,
         }
       }, meths.parse_cmd('echo foo', {}))
     end)
@@ -3203,6 +3208,10 @@ describe('API', function()
           browse = false,
           confirm = false,
           emsg_silent = false,
+          filter = {
+              pattern = "",
+              force = false
+          },
           hide = false,
           keepalt = false,
           keepjumps = false,
@@ -3213,10 +3222,11 @@ describe('API', function()
           noswapfile = false,
           sandbox = false,
           silent = false,
-          vertical = false,
           split = "",
           tab = 0,
-          verbose = -1
+          unsilent = false,
+          verbose = -1,
+          vertical = false,
         }
       }, meths.parse_cmd('4,6s/math.random/math.max/', {}))
     end)
@@ -3239,6 +3249,10 @@ describe('API', function()
           browse = false,
           confirm = false,
           emsg_silent = false,
+          filter = {
+              pattern = "",
+              force = false
+          },
           hide = false,
           keepalt = false,
           keepjumps = false,
@@ -3249,10 +3263,11 @@ describe('API', function()
           noswapfile = false,
           sandbox = false,
           silent = false,
-          vertical = false,
           split = "",
           tab = 0,
-          verbose = -1
+          unsilent = false,
+          verbose = -1,
+          vertical = false,
         }
       }, meths.parse_cmd('buffer 1', {}))
     end)
@@ -3275,6 +3290,10 @@ describe('API', function()
           browse = false,
           confirm = false,
           emsg_silent = false,
+          filter = {
+              pattern = "",
+              force = false
+          },
           hide = false,
           keepalt = false,
           keepjumps = false,
@@ -3285,10 +3304,11 @@ describe('API', function()
           noswapfile = false,
           sandbox = false,
           silent = false,
-          vertical = false,
           split = "",
           tab = 0,
-          verbose = -1
+          unsilent = false,
+          verbose = -1,
+          vertical = false,
         }
       }, meths.parse_cmd('put +', {}))
     end)
@@ -3311,6 +3331,10 @@ describe('API', function()
           browse = false,
           confirm = false,
           emsg_silent = false,
+          filter = {
+              pattern = "",
+              force = false
+          },
           hide = false,
           keepalt = false,
           keepjumps = false,
@@ -3321,10 +3345,11 @@ describe('API', function()
           noswapfile = false,
           sandbox = false,
           silent = false,
-          vertical = false,
           split = "",
           tab = 0,
-          verbose = -1
+          unsilent = false,
+          verbose = -1,
+          vertical = false,
         }
       }, meths.parse_cmd('1,3delete * 5', {}))
     end)
@@ -3347,6 +3372,10 @@ describe('API', function()
           browse = false,
           confirm = false,
           emsg_silent = false,
+          filter = {
+              pattern = "",
+              force = false
+          },
           hide = false,
           keepalt = false,
           keepjumps = false,
@@ -3357,10 +3386,11 @@ describe('API', function()
           noswapfile = false,
           sandbox = false,
           silent = false,
-          vertical = false,
           split = "",
           tab = 0,
-          verbose = -1
+          unsilent = false,
+          verbose = -1,
+          vertical = false,
         },
       }, meths.parse_cmd('w!', {}))
     end)
@@ -3383,6 +3413,10 @@ describe('API', function()
           browse = false,
           confirm = false,
           emsg_silent = true,
+          filter = {
+              pattern = "foo",
+              force = false
+          },
           hide = false,
           keepalt = false,
           keepjumps = false,
@@ -3393,12 +3427,52 @@ describe('API', function()
           noswapfile = false,
           sandbox = false,
           silent = true,
-          vertical = false,
           split = "topleft",
           tab = 2,
-          verbose = 15
+          unsilent = false,
+          verbose = 15,
+          vertical = false,
         },
-      }, meths.parse_cmd('15verbose silent! aboveleft topleft tab split foo.txt', {}))
+      }, meths.parse_cmd('15verbose silent! aboveleft topleft tab filter /foo/ split foo.txt', {}))
+      eq({
+        cmd = 'split',
+        args = { 'foo.txt' },
+        bang = false,
+        range = {},
+        count = -1,
+        reg = '',
+        addr = '?',
+        magic = {
+            file = true,
+            bar = true
+        },
+        nargs = '?',
+        nextcmd = '',
+        mods = {
+          browse = false,
+          confirm = true,
+          emsg_silent = false,
+          filter = {
+              pattern = "foo",
+              force = true
+          },
+          hide = false,
+          keepalt = false,
+          keepjumps = false,
+          keepmarks = false,
+          keeppatterns = false,
+          lockmarks = false,
+          noautocmd = false,
+          noswapfile = false,
+          sandbox = false,
+          silent = false,
+          split = "botright",
+          tab = 0,
+          unsilent = true,
+          verbose = 0,
+          vertical = false,
+        },
+      }, meths.parse_cmd('0verbose unsilent botright confirm filter! /foo/ split foo.txt', {}))
     end)
     it('works with user commands', function()
       command('command -bang -nargs=+ -range -addr=lines MyCommand echo foo')
@@ -3420,6 +3494,10 @@ describe('API', function()
           browse = false,
           confirm = false,
           emsg_silent = false,
+          filter = {
+              pattern = "",
+              force = false
+          },
           hide = false,
           keepalt = false,
           keepjumps = false,
@@ -3430,10 +3508,11 @@ describe('API', function()
           noswapfile = false,
           sandbox = false,
           silent = false,
-          vertical = false,
           split = "",
           tab = 0,
-          verbose = -1
+          unsilent = false,
+          verbose = -1,
+          vertical = false,
         }
       }, meths.parse_cmd('4,6MyCommand! test it', {}))
     end)
@@ -3456,6 +3535,10 @@ describe('API', function()
           browse = false,
           confirm = false,
           emsg_silent = false,
+          filter = {
+              pattern = "",
+              force = false
+          },
           hide = false,
           keepalt = false,
           keepjumps = false,
@@ -3466,10 +3549,11 @@ describe('API', function()
           noswapfile = false,
           sandbox = false,
           silent = false,
-          vertical = false,
           split = "",
           tab = 0,
-          verbose = -1
+          unsilent = false,
+          verbose = -1,
+          vertical = false,
         }
       }, meths.parse_cmd('argadd a.txt | argadd b.txt', {}))
     end)
@@ -3493,6 +3577,10 @@ describe('API', function()
           browse = false,
           confirm = false,
           emsg_silent = false,
+          filter = {
+              pattern = "",
+              force = false
+          },
           hide = false,
           keepalt = false,
           keepjumps = false,
@@ -3503,10 +3591,11 @@ describe('API', function()
           noswapfile = false,
           sandbox = false,
           silent = false,
-          vertical = false,
           split = "",
           tab = 0,
-          verbose = -1
+          unsilent = false,
+          verbose = -1,
+          vertical = false,
         }
       }, meths.parse_cmd('MyCommand test it', {}))
     end)
@@ -3604,6 +3693,13 @@ describe('API', function()
       meths.create_user_command("Foo", 'set verbose', {})
       eq("  verbose=1", meths.cmd({ cmd = "Foo", mods = { verbose = 1 } }, { output = true }))
       eq(0, meths.get_option_value("verbose", {}))
+      command('edit foo.txt | edit bar.txt')
+      eq('  1 #h   "foo.txt"                      line 1',
+         meths.cmd({ cmd = "buffers", mods = { filter = { pattern = "foo", force = false } } },
+                   { output = true }))
+      eq('  2 %a   "bar.txt"                      line 1',
+         meths.cmd({ cmd = "buffers", mods = { filter = { pattern = "foo", force = true } } },
+                   { output = true }))
     end)
     it('works with magic.file', function()
       exec_lua([[
@@ -3663,7 +3759,7 @@ describe('API', function()
       eq("foo", meths.cmd({ cmd = "Foo" }, { output = true }))
     end)
     it('errors if command is not implemented', function()
-      eq("Command not implemented: popup", pcall_err(meths.cmd, { cmd = "popup" }, {}))
+      eq("Command not implemented: winpos", pcall_err(meths.cmd, { cmd = "winpos" }, {}))
     end)
     it('works with empty arguments list', function()
       meths.cmd({ cmd = "update" }, {})

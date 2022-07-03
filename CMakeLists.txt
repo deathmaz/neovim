@@ -21,6 +21,9 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 # We don't support building in-tree.
 include(PreventInTreeBuilds)
+include(Util)
+
+set(TOUCHES_DIR ${PROJECT_BINARY_DIR}/touches)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -271,6 +274,7 @@ int main(void)
 }
 " HAVE_BUILTIN_ADD_OVERFLOW)
 
+option(ENABLE_COMPILER_SUGGESTIONS "Enable -Wsuggest compiler warnings" OFF)
 if(MSVC)
   # XXX: /W4 gives too many warnings. #3241
   add_compile_options(/W3)
@@ -289,25 +293,27 @@ else()
     add_compile_options(-Wimplicit-fallthrough)
   endif()
 
-  # Clang doesn't have -Wsuggest-attribute so check for each one.
-  check_c_compiler_flag(-Wsuggest-attribute=pure HAVE_WSUGGEST_ATTRIBUTE_PURE)
-  if(HAVE_WSUGGEST_ATTRIBUTE_PURE)
-    add_compile_options(-Wsuggest-attribute=pure)
-  endif()
+  if(ENABLE_COMPILER_SUGGESTIONS)
+    # Clang doesn't have -Wsuggest-attribute so check for each one.
+    check_c_compiler_flag(-Wsuggest-attribute=pure HAVE_WSUGGEST_ATTRIBUTE_PURE)
+    if(HAVE_WSUGGEST_ATTRIBUTE_PURE)
+      add_compile_options(-Wsuggest-attribute=pure)
+    endif()
 
-  check_c_compiler_flag(-Wsuggest-attribute=const HAVE_WSUGGEST_ATTRIBUTE_CONST)
-  if(HAVE_WSUGGEST_ATTRIBUTE_CONST)
-    add_compile_options(-Wsuggest-attribute=const)
-  endif()
+    check_c_compiler_flag(-Wsuggest-attribute=const HAVE_WSUGGEST_ATTRIBUTE_CONST)
+    if(HAVE_WSUGGEST_ATTRIBUTE_CONST)
+      add_compile_options(-Wsuggest-attribute=const)
+    endif()
 
-  check_c_compiler_flag(-Wsuggest-attribute=malloc HAVE_WSUGGEST_ATTRIBUTE_MALLOC)
-  if(HAVE_WSUGGEST_ATTRIBUTE_MALLOC)
-    add_compile_options(-Wsuggest-attribute=malloc)
-  endif()
+    check_c_compiler_flag(-Wsuggest-attribute=malloc HAVE_WSUGGEST_ATTRIBUTE_MALLOC)
+    if(HAVE_WSUGGEST_ATTRIBUTE_MALLOC)
+      add_compile_options(-Wsuggest-attribute=malloc)
+    endif()
 
-  check_c_compiler_flag(-Wsuggest-attribute=cold HAVE_WSUGGEST_ATTRIBUTE_COLD)
-  if(HAVE_WSUGGEST_ATTRIBUTE_COLD)
-    add_compile_options(-Wsuggest-attribute=cold)
+    check_c_compiler_flag(-Wsuggest-attribute=cold HAVE_WSUGGEST_ATTRIBUTE_COLD)
+    if(HAVE_WSUGGEST_ATTRIBUTE_COLD)
+      add_compile_options(-Wsuggest-attribute=cold)
+    endif()
   endif()
 
   # On FreeBSD 64 math.h uses unguarded C11 extension, which taints clang
@@ -611,34 +617,53 @@ find_program(STYLUA_PRG stylua)
 find_program(FLAKE8_PRG flake8)
 find_program(UNCRUSTIFY_PRG uncrustify)
 find_program(SHELLCHECK_PRG shellcheck)
-include(DefCmdTarget)
-def_cmd_target(lintlua ${LUACHECK_PRG} LUACHECK_PRG true)
-if(LUACHECK_PRG)
-  add_custom_command(TARGET lintlua
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMAND ${LUACHECK_PRG} -q runtime/ scripts/ src/ test/)
-endif()
-if(STYLUA_PRG)
-  add_custom_command(TARGET lintlua
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMAND ${STYLUA_PRG} --color=always --check runtime/)
-else()
-  add_custom_command(TARGET lintlua COMMAND ${CMAKE_COMMAND} -E echo "STYLUA_PRG not found")
-endif()
-def_cmd_target(lintpy ${FLAKE8_PRG} FLAKE8_PRG false)
-if(FLAKE8_PRG)
-  add_custom_command(TARGET lintpy
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMAND ${FLAKE8_PRG} contrib/ scripts/ src/ test/)
-endif()
-def_cmd_target(lintsh ${SHELLCHECK_PRG} SHELLCHECK_PRG false)
-if(SHELLCHECK_PRG)
-  add_custom_command(TARGET lintsh
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMAND ${SHELLCHECK_PRG} scripts/vim-patch.sh)
-endif()
+
+add_glob_targets(
+  REQUIRED
+  TARGET lintlua-luacheck
+  COMMAND ${LUACHECK_PRG}
+  FLAGS -q
+  GLOB_DIRS runtime/ scripts/ src/ test/
+  GLOB_PAT *.lua
+  TOUCH_STRATEGY SINGLE
+  )
+
+add_glob_targets(
+  TARGET lintlua-stylua
+  COMMAND ${STYLUA_PRG}
+  FLAGS --color=always --check
+  GLOB_DIRS runtime/
+  GLOB_PAT *.lua
+  TOUCH_STRATEGY SINGLE
+  )
+
+add_custom_target(lintlua)
+add_dependencies(lintlua lintlua-luacheck lintlua-stylua)
 
 include(InstallHelpers)
+add_glob_targets(
+  TARGET lintpy
+  COMMAND ${FLAKE8_PRG}
+  GLOB_DIRS contrib scripts src test
+  GLOB_PAT *.py
+  TOUCH_STRATEGY SINGLE
+  )
+
+add_glob_targets(
+  TARGET lintsh
+  COMMAND ${SHELLCHECK_PRG}
+  FILES scripts/vim-patch.sh
+  TOUCH_STRATEGY SINGLE
+  )
+
+add_custom_target(lintcommit
+  COMMAND ${PROJECT_BINARY_DIR}/bin/nvim -u NONE -es -c [[lua require('scripts.lintcommit').main({trace=false})]]
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  VERBATIM)
+add_dependencies(lintcommit nvim)
+
+add_custom_target(lint)
+add_dependencies(lint check-single-includes lintc lintlua lintpy lintsh lintcommit lintuncrustify)
 
 install_helper(
   FILES ${CMAKE_SOURCE_DIR}/src/man/nvim.1
@@ -762,3 +787,4 @@ add_custom_target(uninstall
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
   add_subdirectory(cmake.packaging)
 endif()
+

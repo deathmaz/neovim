@@ -95,10 +95,10 @@ return {
     "standout";
     "strikethrough";
     "underline";
-    "underlineline";
     "undercurl";
-    "underdot";
-    "underdash";
+    "underdouble";
+    "underdotted";
+    "underdashed";
     "italic";
     "reverse";
     "nocombine";
@@ -120,10 +120,10 @@ return {
     "standout";
     "strikethrough";
     "underline";
-    "underlineline";
     "undercurl";
-    "underdot";
-    "underdash";
+    "underdouble";
+    "underdotted";
+    "underdashed";
     "italic";
     "reverse";
     "nocombine";
@@ -181,6 +181,8 @@ return {
   cmd_mods = {
     "silent";
     "emsg_silent";
+    "unsilent";
+    "filter";
     "sandbox";
     "noautocmd";
     "browse";
@@ -196,6 +198,10 @@ return {
     "verbose";
     "vertical";
     "split";
+  };
+  cmd_mods_filter = {
+    "pattern";
+    "force";
   };
   cmd_opts = {
     "output";

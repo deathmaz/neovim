@@ -286,6 +286,8 @@ static struct spat saved_last_search_spat;
 static int did_save_last_search_spat = 0;
 static int saved_last_idx = 0;
 static bool saved_no_hlsearch = false;
+static colnr_T saved_search_match_endcol;
+static linenr_T saved_search_match_lines;
 
 /// Save and restore the search pattern for incremental highlight search
 /// feature.
@@ -326,6 +328,21 @@ void restore_last_search_pattern(void)
   set_vv_searchforward();
   last_idx = saved_last_idx;
   set_no_hlsearch(saved_no_hlsearch);
+}
+
+/// Save and restore the incsearch highlighting variables.
+/// This is required so that calling searchcount() at does not invalidate the
+/// incsearch highlighting.
+static void save_incsearch_state(void)
+{
+  saved_search_match_endcol = search_match_endcol;
+  saved_search_match_lines  = search_match_lines;
+}
+
+static void restore_incsearch_state(void)
+{
+  search_match_endcol = saved_search_match_endcol;
+  search_match_lines  = saved_search_match_lines;
 }
 
 char_u *last_search_pattern(void)
@@ -4717,6 +4734,7 @@ void f_searchcount(typval_T *argvars, typval_T *rettv, FunPtr fptr)
   }
 
   save_last_search_pattern();
+  save_incsearch_state();
   if (pattern != NULL) {
     if (*pattern == NUL) {
       goto the_end;
@@ -4738,6 +4756,7 @@ void f_searchcount(typval_T *argvars, typval_T *rettv, FunPtr fptr)
 
 the_end:
   restore_last_search_pattern();
+  restore_incsearch_state();
 }
 
 /// Fuzzy string matching
@@ -5387,9 +5406,9 @@ void find_pattern_in_path(char_u *ptr, Direction dir, size_t len, bool whole, bo
 
   for (;;) {
     if (incl_regmatch.regprog != NULL
-        && vim_regexec(&incl_regmatch, line, (colnr_T)0)) {
+        && vim_regexec(&incl_regmatch, (char *)line, (colnr_T)0)) {
       char_u *p_fname = (curr_fname == (char_u *)curbuf->b_fname)
-                        ? curbuf->b_ffname : curr_fname;
+                        ? (char_u *)curbuf->b_ffname : curr_fname;
 
       if (inc_opt != NULL && strstr((char *)inc_opt, "\\zs") != NULL) {
         // Use text from '\zs' to '\ze' (or end) of 'include'.
@@ -5567,12 +5586,10 @@ void find_pattern_in_path(char_u *ptr, Direction dir, size_t len, bool whole, bo
 search_line:
       define_matched = false;
       if (def_regmatch.regprog != NULL
-          && vim_regexec(&def_regmatch, line, (colnr_T)0)) {
-        /*
-         * Pattern must be first identifier after 'define', so skip
-         * to that position before checking for match of pattern.  Also
-         * don't let it match beyond the end of this identifier.
-         */
+          && vim_regexec(&def_regmatch, (char *)line, (colnr_T)0)) {
+        // Pattern must be first identifier after 'define', so skip
+        // to that position before checking for match of pattern.  Also
+        // don't let it match beyond the end of this identifier.
         p = def_regmatch.endp[0];
         while (*p && !vim_iswordc(*p)) {
           p++;
@@ -5599,7 +5616,7 @@ search_line:
             matched = false;
           }
         } else if (regmatch.regprog != NULL
-                   && vim_regexec(&regmatch, line, (colnr_T)(p - line))) {
+                   && vim_regexec(&regmatch, (char *)line, (colnr_T)(p - line))) {
           matched = true;
           startp = regmatch.startp[0];
           // Check if the line is not a comment line (unless we are
@@ -5608,7 +5625,7 @@ search_line:
           if (skip_comments) {
             if ((*line != '#'
                  || STRNCMP(skipwhite((char *)line + 1), "define", 6) != 0)
-                && get_leader_len(line, NULL, false, true)) {
+                && get_leader_len((char *)line, NULL, false, true)) {
               matched = false;
             }
 
