@@ -503,14 +503,13 @@ EXTERN int stdout_isatty INIT(= true);
 EXTERN int stdin_fd INIT(= -1);
 
 // true when doing full-screen output, otherwise only writing some messages.
-// volatile because it is used in a signal handler.
-EXTERN volatile int full_screen INIT(= false);
+EXTERN int full_screen INIT(= false);
 
 /// Non-zero when only "safe" commands are allowed, e.g. when sourcing .exrc or
 /// .vimrc in current directory.
 EXTERN int secure INIT(= 0);
 
-/// Non-zero when changing text and jumping to another window/buffer is not
+/// Non-zero when changing text and jumping to another window or editing another buffer is not
 /// allowed.
 EXTERN int textlock INIT(= 0);
 
@@ -724,7 +723,8 @@ EXTERN bool need_highlight_changed INIT(= true);
 
 EXTERN FILE *scriptout INIT(= NULL);  ///< Stream to write script to.
 
-// volatile because it is used in a signal handler.
+// Note that even when handling SIGINT, volatile is not necessary because the
+// callback is not called directly from the signal handlers.
 EXTERN bool got_int INIT(= false);          // set to true when interrupt signal occurred
 EXTERN bool bangredo INIT(= false);         // set to true with ! command
 EXTERN int searchcmdlen;                    // length of previous search cmd
@@ -955,6 +955,7 @@ EXTERN char e_listdictblobarg[] INIT(= N_("E896: Argument of %s must be a List, 
 EXTERN char e_readerrf[] INIT(= N_("E47: Error while reading errorfile"));
 EXTERN char e_sandbox[] INIT(= N_("E48: Not allowed in sandbox"));
 EXTERN char e_secure[] INIT(= N_("E523: Not allowed here"));
+EXTERN char e_textlock[] INIT(= N_("E565: Not allowed to change text or change window"));
 EXTERN char e_screenmode[] INIT(= N_("E359: Screen mode setting not supported"));
 EXTERN char e_scroll[] INIT(= N_("E49: Invalid scroll size"));
 EXTERN char e_shellempty[] INIT(= N_("E91: 'shell' option is empty"));
