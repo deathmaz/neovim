@@ -21,6 +21,7 @@
 #include "nvim/edit.h"
 #include "nvim/eval.h"
 #include "nvim/eval/userfunc.h"
+#include "nvim/eval/vars.h"
 #include "nvim/event/rstream.h"
 #include "nvim/event/wstream.h"
 #include "nvim/ex_cmds.h"
@@ -2852,11 +2853,13 @@ int parse_cmd_address(exarg_T *eap, char **errormsg, bool silent)
           if (!mark_check(fm)) {
             goto theend;
           }
+          assert(fm != NULL);
           eap->line1 = fm->mark.lnum;
           fm = mark_get_visual(curbuf, '>');
           if (!mark_check(fm)) {
             goto theend;
           }
+          assert(fm != NULL);
           eap->line2 = fm->mark.lnum;
           eap->addr_count++;
         }
@@ -3049,6 +3052,7 @@ char *find_ex_command(exarg_T *eap, int *full)
     } else {
       eap->cmdidx = CMD_bang;
     }
+    assert(eap->cmdidx >= 0);
 
     for (; (int)eap->cmdidx < CMD_SIZE;
          eap->cmdidx = (cmdidx_T)((int)eap->cmdidx + 1)) {
@@ -3268,6 +3272,7 @@ int cmd_exists(const char *const name)
   // For ":2match" and ":3match" we need to skip the number.
   ea.cmd = (char *)((*name == '2' || *name == '3') ? name + 1 : name);
   ea.cmdidx = (cmdidx_T)0;
+  ea.flags = 0;
   int full = false;
   p = find_ex_command(&ea, &full);
   if (p == NULL) {
@@ -3301,6 +3306,7 @@ void f_fullcommand(typval_T *argvars, typval_T *rettv, FunPtr fptr)
 
   ea.cmd = (*name == '2' || *name == '3') ? name + 1 : name;
   ea.cmdidx = (cmdidx_T)0;
+  ea.flags = 0;
   char *p = find_ex_command(&ea, NULL);
   if (p == NULL || ea.cmdidx == CMD_SIZE) {
     return;
@@ -4390,6 +4396,7 @@ static linenr_T get_address(exarg_T *eap, char **ptr, cmd_addr_T addr_type, int 
             cmd = NULL;
             goto error;
           }
+          assert(fm != NULL);
           lnum = fm->mark.lnum;
         }
       }
@@ -6783,9 +6790,18 @@ char *get_user_commands(expand_T *xp FUNC_ATTR_UNUSED, int idx)
   if (idx < buf->b_ucmds.ga_len) {
     return (char *)USER_CMD_GA(&buf->b_ucmds, idx)->uc_name;
   }
+
   idx -= buf->b_ucmds.ga_len;
   if (idx < ucmds.ga_len) {
-    return (char *)USER_CMD(idx)->uc_name;
+    char *name = (char *)USER_CMD(idx)->uc_name;
+
+    for (int i = 0; i < buf->b_ucmds.ga_len; i++) {
+      if (STRCMP(name, USER_CMD_GA(&buf->b_ucmds, i)->uc_name) == 0) {
+        // global command is overruled by buffer-local one
+        return "";
+      }
+    }
+    return name;
   }
   return NULL;
 }

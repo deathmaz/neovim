@@ -92,6 +92,7 @@
 #include "nvim/highlight.h"
 #include "nvim/highlight_group.h"
 #include "nvim/indent.h"
+#include "nvim/insexpand.h"
 #include "nvim/lib/kvec.h"
 #include "nvim/log.h"
 #include "nvim/lua/executor.h"
@@ -2114,7 +2115,7 @@ static int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool noc
   bool has_decor = false;               // this buffer has decoration
   int win_col_offset = 0;               // offset for window columns
 
-  char_u buf_fold[FOLD_TEXT_LEN + 1];   // Hold value returned by get_foldtext
+  char_u buf_fold[FOLD_TEXT_LEN];       // Hold value returned by get_foldtext
 
   bool area_active = false;
 
@@ -2904,7 +2905,7 @@ static int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool noc
 
     if (draw_state == WL_LINE
         && has_fold
-        && vcol == 0
+        && col == win_col_offset
         && n_extra == 0
         && row == startrow) {
       char_attr = win_hl_attr(wp, HLF_FL);
