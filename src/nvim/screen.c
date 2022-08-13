@@ -81,7 +81,6 @@
 #include "nvim/edit.h"
 #include "nvim/eval.h"
 #include "nvim/ex_cmds.h"
-#include "nvim/ex_cmds2.h"
 #include "nvim/ex_getln.h"
 #include "nvim/extmark.h"
 #include "nvim/fileio.h"
@@ -112,6 +111,7 @@
 #include "nvim/path.h"
 #include "nvim/plines.h"
 #include "nvim/popupmnu.h"
+#include "nvim/profile.h"
 #include "nvim/quickfix.h"
 #include "nvim/regexp.h"
 #include "nvim/screen.h"
@@ -2395,7 +2395,7 @@ static int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool noc
     }
   }
 
-  memset(sattrs, 0, sizeof(sattrs));
+  CLEAR_FIELD(sattrs);
   num_signs = buf_get_signattrs(wp->w_buffer, lnum, sattrs);
   decor_redraw_signs(buf, lnum - 1, &num_signs, sattrs);
 

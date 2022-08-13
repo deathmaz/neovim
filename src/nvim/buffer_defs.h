@@ -30,14 +30,12 @@ typedef struct {
 #include "nvim/option_defs.h"
 // for jump list and tag stack sizes in a buffer and mark types
 #include "nvim/mark_defs.h"
-// for u_header_T; needs buf_T.
+// for u_header_T
 #include "nvim/undo_defs.h"
 // for hashtab_T
 #include "nvim/hashtab.h"
 // for dict_T
 #include "nvim/eval/typval.h"
-// for proftime_T
-#include "nvim/profile.h"
 // for String
 #include "nvim/api/private/defs.h"
 // for Map(K, V)

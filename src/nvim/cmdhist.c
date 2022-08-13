@@ -178,7 +178,7 @@ static inline void hist_free_entry(histentry_T *hisptr)
 static inline void clear_hist_entry(histentry_T *hisptr)
   FUNC_ATTR_NONNULL_ALL
 {
-  memset(hisptr, 0, sizeof(*hisptr));
+  CLEAR_POINTER(hisptr);
 }
 
 /// Check if command line 'str' is already in history.
@@ -583,7 +583,7 @@ void ex_history(exarg_T *eap)
   int hisidx2 = -1;
   int idx;
   int i, j, k;
-  char_u *end;
+  char *end;
   char_u *arg = (char_u *)eap->arg;
 
   if (hislen == 0) {
@@ -592,14 +592,14 @@ void ex_history(exarg_T *eap)
   }
 
   if (!(ascii_isdigit(*arg) || *arg == '-' || *arg == ',')) {
-    end = arg;
+    end = (char *)arg;
     while (ASCII_ISALPHA(*end)
            || vim_strchr(":=@>/?", *end) != NULL) {
       end++;
     }
-    histype1 = get_histtype((const char *)arg, (size_t)(end - arg), false);
+    histype1 = get_histtype((const char *)arg, (size_t)(end - (char *)arg), false);
     if (histype1 == HIST_INVALID) {
-      if (STRNICMP(arg, "all", end - arg) == 0) {
+      if (STRNICMP(arg, "all", end - (char *)arg) == 0) {
         histype1 = 0;
         histype2 = HIST_COUNT - 1;
       } else {
@@ -610,7 +610,7 @@ void ex_history(exarg_T *eap)
       histype2 = histype1;
     }
   } else {
-    end = arg;
+    end = (char *)arg;
   }
   if (!get_list_range(&end, &hisidx1, &hisidx2) || *end != NUL) {
     semsg(_(e_trailing_arg), end);
@@ -714,7 +714,7 @@ const void *hist_iter(const void *const iter, const uint8_t history_type, const 
   }
   *hist = *hiter;
   if (zero) {
-    memset(hiter, 0, sizeof(*hiter));
+    CLEAR_POINTER(hiter);
   }
   if (hiter == hlast) {
     return NULL;

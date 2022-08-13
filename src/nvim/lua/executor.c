@@ -15,12 +15,12 @@
 #include "nvim/buffer_defs.h"
 #include "nvim/change.h"
 #include "nvim/cursor.h"
+#include "nvim/eval.h"
 #include "nvim/eval/funcs.h"
 #include "nvim/eval/typval.h"
 #include "nvim/eval/userfunc.h"
 #include "nvim/event/loop.h"
 #include "nvim/event/time.h"
-#include "nvim/ex_cmds2.h"
 #include "nvim/ex_getln.h"
 #include "nvim/extmark.h"
 #include "nvim/func_attr.h"
@@ -447,7 +447,7 @@ static nlua_ref_state_t *nlua_new_ref_state(lua_State *lstate, bool is_thread)
   FUNC_ATTR_NONNULL_ALL
 {
   nlua_ref_state_t *ref_state = lua_newuserdata(lstate, sizeof(*ref_state));
-  memset(ref_state, 0, sizeof(*ref_state));
+  CLEAR_POINTER(ref_state);
   ref_state->nil_ref = LUA_NOREF;
   ref_state->empty_dict_ref = LUA_NOREF;
   if (!is_thread) {

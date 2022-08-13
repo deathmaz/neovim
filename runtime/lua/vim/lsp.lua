@@ -400,7 +400,8 @@ do
   ---@return CTGroup
   local function get_group(client)
     local allow_inc_sync = if_nil(client.config.flags.allow_incremental_sync, true)
-    local change_capability = vim.tbl_get(client.server_capabilities, 'textDocumentSync', 'change')
+    local change_capability =
+      vim.tbl_get(client.server_capabilities or {}, 'textDocumentSync', 'change')
     local sync_kind = change_capability or protocol.TextDocumentSyncKind.None
     if not allow_inc_sync and change_capability == protocol.TextDocumentSyncKind.Incremental then
       sync_kind = protocol.TextDocumentSyncKind.Full
@@ -690,7 +691,7 @@ end
 --- Default handler for the 'textDocument/didOpen' LSP notification.
 ---
 ---@param bufnr number Number of the buffer, or 0 for current
----@param client Client object
+---@param client table Client object
 local function text_document_did_open_handler(bufnr, client)
   changetracking.init(client, bufnr)
   if not vim.tbl_get(client.server_capabilities, 'textDocumentSync', 'openClose') then
@@ -1148,7 +1149,11 @@ function lsp.start_client(config)
     active_clients[client_id] = nil
     uninitialized_clients[client_id] = nil
 
-    changetracking.reset(client)
+    -- Client can be absent if executable starts, but initialize fails
+    -- init/attach won't have happened
+    if client then
+      changetracking.reset(client)
+    end
     if code ~= 0 or (signal ~= 0 and signal ~= 15) then
       local msg =
         string.format('Client %s quit with exit code %s and signal %s', client_id, code, signal)
